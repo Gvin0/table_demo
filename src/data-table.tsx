@@ -43,12 +43,18 @@ export function DataTable<TData extends Payment, TValue>({
   const [addingRowId, setAddingRowId] = useState<string | number | null>(null);
   const [highlightedRowId, setHighlightedRowId] = useState<string | null>(null);
 
-  const [newColumnName, setNewColumnName] = useState<string | null>('');
-  const newColumnNameRef = useRef(newColumnName);
+  const [columnInputs, setColumnInputs] = useState<Map<string, string> | null>(
+    new Map()
+  );
+  const columnInputsRef = useRef(columnInputs);
 
-  const syncNewColumnNameRef = (name: string) => {
-    setNewColumnName(name);
-    newColumnNameRef.current = name;
+  const handleInputChange = (columnId: string, value: string) => {
+    setColumnInputs((prevInputs) => {
+      const newInputs = new Map(prevInputs);
+      newInputs.set(columnId, value);
+      columnInputsRef.current = newInputs;
+      return newInputs;
+    });
   };
 
   const handleInputSubmit = (
@@ -65,15 +71,21 @@ export function DataTable<TData extends Payment, TValue>({
   };
 
   const finalizeNewColumn = (columnId: string) => {
-    const columnName = newColumnNameRef.current?.trim();
+    const columnName = columnInputsRef.current?.get(columnId)?.trim();
     if (!columnName) return;
+
     setColumns((prevColumns) =>
       prevColumns.map((col) =>
         col.id === columnId ? { ...col, header: columnName } : col
       )
     );
-    setNewColumnName(null);
-    newColumnNameRef.current = null;
+
+    setColumnInputs((prevInputs) => {
+      const newInputs = new Map(prevInputs);
+      newInputs.delete(columnId);
+      columnInputsRef.current = newInputs;
+      return newInputs;
+    });
   };
 
   const table = useReactTable({
@@ -82,14 +94,13 @@ export function DataTable<TData extends Payment, TValue>({
     getCoreRowModel: getCoreRowModel(),
     meta: {
       addColumn: () => {
-        console.log('columns.length - 1', columns.length - 1);
-        const columnId = `column${columns.length - 1}`;
+        const columnId = `column-${Date.now()}`;
         const newColumn: ColumnDef<TData, TValue> = {
           id: columnId,
           header: () => (
             <Input
-              value={newColumnNameRef.current || ''}
-              onChange={(e) => syncNewColumnNameRef(e.target.value)}
+              value={columnInputsRef.current?.get(columnId) || ''}
+              onChange={(e) => handleInputChange(columnId, e.target.value)}
               onBlur={(e) => handleInputSubmit(e, columnId)}
               onKeyDown={(e) => handleInputSubmit(e, columnId)}
               type={'text'}
@@ -107,8 +118,12 @@ export function DataTable<TData extends Payment, TValue>({
           newColumns.splice(columns.length - 1, 0, newColumn);
           return newColumns;
         });
-        setNewColumnName('');
-        newColumnNameRef.current = null;
+        columnInputsRef.current?.set(columnId, '');
+        setColumnInputs((prevInputs) => {
+          const newInputs = new Map(prevInputs);
+          newInputs.delete(columnId);
+          return newInputs;
+        });
       },
       updateData: <K extends keyof TData>(
         rowIndex: number,
@@ -128,7 +143,6 @@ export function DataTable<TData extends Payment, TValue>({
         );
       },
       removeRow: (id: string | number) => {
-        // setData((old) => old.filter((f) => f.id != rowIndex));
         setDeletingRowId(id);
         setTimeout(() => {
           setData((oldData) => oldData.filter((row) => row.id !== id));
@@ -151,7 +165,6 @@ export function DataTable<TData extends Payment, TValue>({
         }, 200);
       },
       cloneRow: (row: Payment) => {
-        // console.log('Cloning row:', row);
         const clonedRow: Payment = {
           ...row,
           id: `${row.id}-${Math.floor(Math.random() * 10000).toString()}`,
