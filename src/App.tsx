@@ -198,7 +198,7 @@ const columns = [
   {
     id: 'actions',
     header: ({ table }) => {
-      const isDisabled = table.getAllColumns().length > 9;
+      const isDisabled = table.getAllColumns().length > 10;
 
       return (
         <LayoutIcon

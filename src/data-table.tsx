@@ -32,7 +32,15 @@ export function DataTable<TData extends Payment, TValue>({
   data: defaultData,
 }: DataTableProps<TData, TValue>) {
   const [data, setData] = useState<TData[]>(() => [...defaultData]);
+
+  const rowNumberColumn: ColumnDef<TData, unknown> = {
+    id: 'row-number',
+    header: 'No.',
+    cell: (info) => info.row.index + 1, // Display the row number based on its index
+  };
+
   const [columns, setColumns] = useState<ColumnDef<TData, TValue>[]>(() => [
+    rowNumberColumn,
     ...defaultColumns,
   ]);
 
