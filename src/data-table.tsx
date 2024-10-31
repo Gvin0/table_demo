@@ -46,6 +46,7 @@ export function DataTable<TData extends Payment, TValue>({
   const [columnInputs, setColumnInputs] = useState<Map<string, string> | null>(
     new Map()
   );
+
   const columnInputsRef = useRef(columnInputs);
 
   const handleInputChange = (columnId: string, value: string) => {
@@ -112,6 +113,7 @@ export function DataTable<TData extends Payment, TValue>({
           meta: {
             type: 'text',
           },
+          size: 250,
         };
         setColumns((prevColumn) => {
           const newColumns = [...prevColumn];
@@ -187,8 +189,12 @@ export function DataTable<TData extends Payment, TValue>({
   });
 
   return (
-    <div className='rounded-md border'>
-      <Table>
+    <div
+      className={`rounded-md border ${
+        columns.length <= 7 ? 'overflow-x-hidden' : 'overflow-x-auto'
+      } w-full`}
+    >
+      <Table className={'min-w-max table-auto'}>
         <TableHeader>
           {table.getHeaderGroups().map((headerGroup) => (
             <TableRow key={headerGroup.id}>

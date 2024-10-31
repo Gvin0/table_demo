@@ -157,6 +157,7 @@ const columns = [
     meta: {
       type: 'text',
     },
+    size: 100,
   }),
   columnHelper.accessor('amount', {
     header: 'Total Amount',
@@ -164,6 +165,7 @@ const columns = [
     meta: {
       type: 'text',
     },
+    size: 150,
   }),
   columnHelper.accessor('datetime', {
     header: 'Date Of Payment',
@@ -171,6 +173,7 @@ const columns = [
     meta: {
       type: 'date',
     },
+    size: 200,
   }),
   columnHelper.accessor('status', {
     header: 'Invoice Status',
@@ -184,6 +187,7 @@ const columns = [
         { value: 'failed', label: 'failef' },
       ],
     },
+    size: 150,
   }),
   columnHelper.accessor('exice', {
     header: 'Exice Duty',
@@ -191,15 +195,26 @@ const columns = [
     meta: {
       type: 'number',
     },
+    size: 150,
   }),
   {
     id: 'actions',
-    header: ({ table }) => (
-      <LayoutIcon
-        className='cursor-pointer'
-        onClick={() => table.options.meta?.addColumn()}
-      />
-    ),
+    header: ({ table }) => {
+      const isDisabled = table.getAllColumns().length >= 11; // 9ze davabrunot
+
+      return (
+        <LayoutIcon
+          className={`cursor-pointer ${
+            isDisabled ? 'opacity-50 cursor-not-allowed' : ''
+          }`}
+          onClick={() => {
+            if (!isDisabled) {
+              table.options.meta?.addColumn();
+            }
+          }}
+        />
+      );
+    },
     enableHiding: false,
     cell: ({ row, table }) => {
       // const invoice = props.row.original;
