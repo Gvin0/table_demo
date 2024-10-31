@@ -102,8 +102,6 @@ export const CustomTableCell = ({ getValue, row, column, table }) => {
   const columnMeta = column.columnDef.meta;
   const tableMeta = table.options.meta;
 
-  // console.log('column', table.getAllColumns());
-
   useEffect(() => {
     setValue(initialValue);
   }, [initialValue]);
@@ -200,7 +198,7 @@ const columns = [
   {
     id: 'actions',
     header: ({ table }) => {
-      const isDisabled = table.getAllColumns().length >= 11; // 9ze davabrunot
+      const isDisabled = table.getAllColumns().length > 9;
 
       return (
         <LayoutIcon

@@ -100,12 +100,13 @@ export function DataTable<TData extends Payment, TValue>({
           id: columnId,
           header: () => (
             <Input
+              autoFocus
               value={columnInputsRef.current?.get(columnId) || ''}
               onChange={(e) => handleInputChange(columnId, e.target.value)}
               onBlur={(e) => handleInputSubmit(e, columnId)}
               onKeyDown={(e) => handleInputSubmit(e, columnId)}
               type={'text'}
-              className='border rounded p-2 w-full'
+              className='border rounded p-2 w-full autofocus'
               placeholder='Enter column name'
             />
           ),
