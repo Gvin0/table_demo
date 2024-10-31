@@ -45,6 +45,7 @@ export type Payment = {
   status: 'pending' | 'processing' | 'success' | 'failed';
   email: string;
   datetime: Date;
+  [key: string]: unknown;
 };
 
 type Option = {
@@ -96,15 +97,15 @@ const data: Payment[] = [
   // ...
 ];
 
-export const CustomTableCell = ({ getValue, row, column, table }) => {
-  const initialValue = getValue() ?? '';
-  const [value, setValue] = useState(initialValue);
+export const CustomTableCell = ({ row, column, table }) => {
+  const [value, setValue] = useState(row.original[column.id] ?? ''); // crutial for bug fixing
   const columnMeta = column.columnDef.meta;
   const tableMeta = table.options.meta;
 
   useEffect(() => {
-    setValue(initialValue);
-  }, [initialValue]);
+    setValue(row.original[column.id] ?? '');
+  }, [row.original, column.id]);
+
   const onBlur = () => {
     table.options.meta?.updateData(
       row.index,
@@ -119,9 +120,9 @@ export const CustomTableCell = ({ getValue, row, column, table }) => {
 
   if (columnMeta?.type === 'select') {
     return (
-      <Select onValueChange={onSelectChange} value={initialValue}>
+      <Select onValueChange={onSelectChange} value={value}>
         <SelectTrigger className='w-[180px]'>
-          <SelectValue placeholder={initialValue} />
+          <SelectValue placeholder={value} />
         </SelectTrigger>
         <SelectContent>
           {columnMeta?.options.map((option: Option) => {

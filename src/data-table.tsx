@@ -36,7 +36,7 @@ export function DataTable<TData extends Payment, TValue>({
   const rowNumberColumn: ColumnDef<TData, unknown> = {
     id: 'row-number',
     header: 'No.',
-    cell: (info) => info.row.index + 1, // Display the row number based on its index
+    cell: (info) => info.row.index + 1,
   };
 
   const [columns, setColumns] = useState<ColumnDef<TData, TValue>[]>(() => [
@@ -129,6 +129,14 @@ export function DataTable<TData extends Payment, TValue>({
           newColumns.splice(columns.length - 1, 0, newColumn);
           return newColumns;
         });
+
+        setData((prevData) =>
+          prevData.map((row) => ({
+            ...row,
+            [columnId]: '',
+          }))
+        );
+
         columnInputsRef.current?.set(columnId, '');
         setColumnInputs((prevInputs) => {
           const newInputs = new Map(prevInputs);
@@ -168,6 +176,7 @@ export function DataTable<TData extends Payment, TValue>({
           status: 'pending',
           amount: 0,
           email: '',
+          // ...Object.fromEntries(columns.map((col) => [col.id, ''])),
         };
         setAddingRowId(newRow.id);
         setData((oldData) => [...oldData, newRow as TData]);
@@ -180,7 +189,6 @@ export function DataTable<TData extends Payment, TValue>({
           ...row,
           id: `${row.id}-${Math.floor(Math.random() * 10000).toString()}`,
         };
-
         setData((oldData) => {
           const rowIndex = oldData.findIndex((r) => r.id === row.id);
           if (rowIndex === -1) return oldData;
