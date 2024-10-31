@@ -97,7 +97,7 @@ const data: Payment[] = [
 ];
 
 export const CustomTableCell = ({ getValue, row, column, table }) => {
-  const initialValue = getValue();
+  const initialValue = getValue() ?? '';
   const [value, setValue] = useState(initialValue);
   const columnMeta = column.columnDef.meta;
   const tableMeta = table.options.meta;
