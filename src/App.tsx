@@ -32,6 +32,7 @@ declare module '@tanstack/react-table' {
     addRow: () => void;
     cloneRow: (row: TData) => void;
     addColumn: () => void;
+    finalizeNewColumn: (columnId: string) => void;
   }
 }
 

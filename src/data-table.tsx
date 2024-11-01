@@ -7,7 +7,7 @@ import {
   useReactTable,
 } from '@tanstack/react-table';
 
-import { PlusCircledIcon, CopyIcon } from '@radix-ui/react-icons';
+import { PlusCircledIcon, CopyIcon, TrashIcon } from '@radix-ui/react-icons';
 import { Input } from '@/components/ui/input';
 
 import { CustomTableCell } from './App';
@@ -21,6 +21,14 @@ import {
   TableRow,
   TableFooter,
 } from '@/components/ui/table';
+
+import '@tanstack/table-core';
+
+declare module '@tanstack/table-core' {
+  interface TableState {
+    hoveredColumnId: string | null;
+  }
+}
 
 interface DataTableProps<TData extends Payment, TValue> {
   columns: ColumnDef<TData, TValue>[];
@@ -57,6 +65,8 @@ export function DataTable<TData extends Payment, TValue>({
 
   const columnInputsRef = useRef(columnInputs);
 
+  const [hoveredColumnId, setHoveredColumnId] = useState<string | null>(null);
+
   const handleInputChange = (columnId: string, value: string) => {
     setColumnInputs((prevInputs) => {
       const newInputs = new Map(prevInputs);
@@ -74,34 +84,90 @@ export function DataTable<TData extends Payment, TValue>({
   ) => {
     if (e.type === 'blur' || (e as React.KeyboardEvent).key === 'Enter') {
       if (columnId) {
-        finalizeNewColumn(columnId);
+        // finalizeNewColumn(columnId);
+        table.options.meta?.finalizeNewColumn(columnId);
       }
     }
   };
 
-  const finalizeNewColumn = (columnId: string) => {
-    const columnName = columnInputsRef.current?.get(columnId)?.trim();
-    if (!columnName) return;
-
+  const deleteColumn = (columnId: string) => {
     setColumns((prevColumns) =>
-      prevColumns.map((col) =>
-        col.id === columnId ? { ...col, header: columnName } : col
-      )
+      prevColumns.filter((col) => col.id !== columnId)
     );
+    setData((prevData) =>
+      prevData.map((row) => {
+        const { [columnId]: _, ...newRow } = row;
+        return newRow as unknown as TData;
+      })
+    );
+  };
 
-    setColumnInputs((prevInputs) => {
-      const newInputs = new Map(prevInputs);
-      newInputs.delete(columnId);
-      columnInputsRef.current = newInputs;
-      return newInputs;
-    });
+  const handleMouseEnter = (columnId: string) => {
+    setHoveredColumnId(columnId);
+  };
+
+  const handleMouseLeave = () => {
+    setHoveredColumnId(null);
   };
 
   const table = useReactTable({
     data,
     columns,
+    state: {
+      hoveredColumnId,
+    },
+    onStateChange: (updater) => {
+      if (typeof updater === 'function') {
+        const newHoveredColumnId = updater(table.getState()).hoveredColumnId;
+        setHoveredColumnId(newHoveredColumnId ?? null);
+      } else {
+        setHoveredColumnId(updater.hoveredColumnId ?? null);
+      }
+    },
+
     getCoreRowModel: getCoreRowModel(),
     meta: {
+      finalizeNewColumn: (columnId: string) => {
+        const columnName = columnInputsRef.current?.get(columnId)?.trim();
+        if (!columnName) return;
+
+        setColumns((prevColumns) =>
+          prevColumns.map((col) =>
+            col.id === columnId
+              ? ({
+                  ...col,
+                  header: ({ table }) => (
+                    <div
+                      key={columnId}
+                      className='flex items-center justify-between'
+                      onMouseEnter={() => handleMouseEnter(columnId)}
+                      onMouseLeave={() => handleMouseLeave()}
+                    >
+                      <span>{columnName}</span>
+                      {table.getState().hoveredColumnId === columnId && (
+                        <div className='flex space-x-1 ml-2 opacity-100 transition-opacity duration-300'>
+                          {/* <Pencil1Icon className='cursor-pointer text-blue-500 hover:text-blue-700' /> */}
+                          <TrashIcon
+                            onClick={() => deleteColumn(columnId)}
+                            className='cursor-pointer text-red-500 hover:text-red-700'
+                          />
+                        </div>
+                      )}
+                    </div>
+                  ),
+                } as ColumnDef<TData, TValue>)
+              : col
+          )
+        );
+
+        setColumnInputs((prevInputs) => {
+          const newInputs = new Map(prevInputs);
+          newInputs.delete(columnId);
+          columnInputsRef.current = newInputs;
+          return newInputs;
+        });
+      },
+
       addColumn: () => {
         const columnId = `column-${Date.now()}`;
         const newColumn: ColumnDef<TData, TValue> = {
