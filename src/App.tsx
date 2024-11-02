@@ -15,7 +15,7 @@ import {
 import {
   ColumnDef,
   createColumnHelper,
-  // CellContext,
+  CellContext,
   RowData,
 } from '@tanstack/react-table';
 
@@ -34,6 +34,11 @@ declare module '@tanstack/react-table' {
     addColumn: () => void;
     finalizeNewColumn: (columnId: string) => void;
   }
+}
+
+interface CustomColumnMeta {
+  type?: 'text' | 'select' | 'number' | 'date';
+  options?: { value: string; label: string }[];
 }
 
 import { DataTable } from './data-table';
@@ -98,13 +103,19 @@ const data: Payment[] = [
   // ...
 ];
 
-export const CustomTableCell = ({ row, column, table }) => {
-  const [value, setValue] = useState(row.original[column.id] ?? ''); // crutial for bug fixing
-  const columnMeta = column.columnDef.meta;
+export const CustomTableCell = ({
+  row,
+  column,
+  table,
+}: CellContext<Payment, unknown>) => {
+  const [value, setValue] = useState<string>(
+    String(row.original[column.id] ?? '')
+  ); // crutial for bug fixing
+  const columnMeta = column.columnDef.meta as CustomColumnMeta;
   const tableMeta = table.options.meta;
 
   useEffect(() => {
-    setValue(row.original[column.id] ?? '');
+    setValue(String(row.original[column.id] ?? ''));
   }, [row.original, column.id]);
 
   const onBlur = () => {
@@ -126,13 +137,11 @@ export const CustomTableCell = ({ row, column, table }) => {
           <SelectValue placeholder={value} />
         </SelectTrigger>
         <SelectContent>
-          {columnMeta?.options.map((option: Option) => {
-            return (
-              <SelectItem key={option.value} value={option.value}>
-                {option.value}
-              </SelectItem>
-            );
-          })}
+          {columnMeta?.options?.map((option: Option) => (
+            <SelectItem key={option.value} value={option.value}>
+              {option.value}
+            </SelectItem>
+          )) || null}
         </SelectContent>
       </Select>
     );
@@ -217,8 +226,6 @@ const columns = [
     },
     enableHiding: false,
     cell: ({ row, table }) => {
-      // const invoice = props.row.original;
-
       return table.getRowModel().rows.length > 1 ? (
         <TrashIcon
           onClick={() => table.options.meta?.removeRow(row.original.id)}

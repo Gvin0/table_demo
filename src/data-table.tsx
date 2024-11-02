@@ -5,6 +5,7 @@ import {
   flexRender,
   getCoreRowModel,
   useReactTable,
+  CellContext,
 } from '@tanstack/react-table';
 
 import {
@@ -201,12 +202,14 @@ export function DataTable<TData extends Payment, TValue>({
               placeholder='Enter column name'
             />
           ),
-          cell: (info) => <CustomTableCell {...info} />,
+          cell: (info: CellContext<Payment, unknown>) => (
+            <CustomTableCell {...info} />
+          ),
           meta: {
             type: 'text',
           },
           size: 250,
-        };
+        } as unknown as ColumnDef<TData, TValue>;
         setColumns((prevColumn) => {
           const newColumns = [...prevColumn];
           newColumns.splice(columns.length - 1, 0, newColumn);
