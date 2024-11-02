@@ -1,4 +1,4 @@
-import { useState, useRef } from 'react';
+import { useState } from 'react';
 import { Payment } from './App';
 import {
   ColumnDef,
@@ -7,7 +7,12 @@ import {
   useReactTable,
 } from '@tanstack/react-table';
 
-import { PlusCircledIcon, CopyIcon, TrashIcon } from '@radix-ui/react-icons';
+import {
+  PlusCircledIcon,
+  CopyIcon,
+  TrashIcon,
+  Pencil1Icon,
+} from '@radix-ui/react-icons';
 import { Input } from '@/components/ui/input';
 
 import { CustomTableCell } from './App';
@@ -27,6 +32,7 @@ import '@tanstack/table-core';
 declare module '@tanstack/table-core' {
   interface TableState {
     hoveredColumnId: string | null;
+    columnInputs: Map<string, string> | null;
   }
 }
 
@@ -63,15 +69,12 @@ export function DataTable<TData extends Payment, TValue>({
     new Map()
   );
 
-  const columnInputsRef = useRef(columnInputs);
-
   const [hoveredColumnId, setHoveredColumnId] = useState<string | null>(null);
 
   const handleInputChange = (columnId: string, value: string) => {
     setColumnInputs((prevInputs) => {
       const newInputs = new Map(prevInputs);
       newInputs.set(columnId, value);
-      columnInputsRef.current = newInputs;
       return newInputs;
     });
   };
@@ -84,7 +87,6 @@ export function DataTable<TData extends Payment, TValue>({
   ) => {
     if (e.type === 'blur' || (e as React.KeyboardEvent).key === 'Enter') {
       if (columnId) {
-        // finalizeNewColumn(columnId);
         table.options.meta?.finalizeNewColumn(columnId);
       }
     }
@@ -94,11 +96,37 @@ export function DataTable<TData extends Payment, TValue>({
     setColumns((prevColumns) =>
       prevColumns.filter((col) => col.id !== columnId)
     );
+
     setData((prevData) =>
       prevData.map((row) => {
-        const { [columnId]: _, ...newRow } = row;
-        return newRow as unknown as TData;
+        const newRow = { ...row };
+        delete newRow[columnId as keyof TData];
+        return newRow;
       })
+    );
+  };
+
+  const editColumn = (columnId: string) => {
+    setColumns((prevColumns) =>
+      prevColumns.map((col) =>
+        col.id === columnId
+          ? ({
+              ...col,
+              header: ({ table }) => (
+                <Input
+                  autoFocus
+                  value={table.getState().columnInputs?.get(columnId) || ''}
+                  onChange={(e) => handleInputChange(columnId, e.target.value)}
+                  onBlur={(e) => handleInputSubmit(e, columnId)}
+                  onKeyDown={(e) => handleInputSubmit(e, columnId)}
+                  type={'text'}
+                  className='border rounded p-2 w-full autofocus'
+                  placeholder='Enter column name'
+                />
+              ),
+            } as ColumnDef<TData, TValue>)
+          : col
+      )
     );
   };
 
@@ -115,20 +143,12 @@ export function DataTable<TData extends Payment, TValue>({
     columns,
     state: {
       hoveredColumnId,
+      columnInputs,
     },
-    onStateChange: (updater) => {
-      if (typeof updater === 'function') {
-        const newHoveredColumnId = updater(table.getState()).hoveredColumnId;
-        setHoveredColumnId(newHoveredColumnId ?? null);
-      } else {
-        setHoveredColumnId(updater.hoveredColumnId ?? null);
-      }
-    },
-
     getCoreRowModel: getCoreRowModel(),
     meta: {
       finalizeNewColumn: (columnId: string) => {
-        const columnName = columnInputsRef.current?.get(columnId)?.trim();
+        const columnName = table.getState().columnInputs?.get(columnId)?.trim();
         if (!columnName) return;
 
         setColumns((prevColumns) =>
@@ -139,14 +159,17 @@ export function DataTable<TData extends Payment, TValue>({
                   header: ({ table }) => (
                     <div
                       key={columnId}
-                      className='flex items-center justify-between'
+                      className='flex items-center justify-between hover:cursor-pointer'
                       onMouseEnter={() => handleMouseEnter(columnId)}
                       onMouseLeave={() => handleMouseLeave()}
                     >
                       <span>{columnName}</span>
                       {table.getState().hoveredColumnId === columnId && (
                         <div className='flex space-x-1 ml-2 opacity-100 transition-opacity duration-300'>
-                          {/* <Pencil1Icon className='cursor-pointer text-blue-500 hover:text-blue-700' /> */}
+                          <Pencil1Icon
+                            className='cursor-pointer text-blue-500 hover:text-blue-700'
+                            onClick={() => editColumn(columnId)}
+                          />
                           <TrashIcon
                             onClick={() => deleteColumn(columnId)}
                             className='cursor-pointer text-red-500 hover:text-red-700'
@@ -159,23 +182,17 @@ export function DataTable<TData extends Payment, TValue>({
               : col
           )
         );
-
-        setColumnInputs((prevInputs) => {
-          const newInputs = new Map(prevInputs);
-          newInputs.delete(columnId);
-          columnInputsRef.current = newInputs;
-          return newInputs;
-        });
       },
 
       addColumn: () => {
         const columnId = `column-${Date.now()}`;
+
         const newColumn: ColumnDef<TData, TValue> = {
           id: columnId,
           header: () => (
             <Input
               autoFocus
-              value={columnInputsRef.current?.get(columnId) || ''}
+              value={table.getState().columnInputs?.get(columnId) || ''}
               onChange={(e) => handleInputChange(columnId, e.target.value)}
               onBlur={(e) => handleInputSubmit(e, columnId)}
               onKeyDown={(e) => handleInputSubmit(e, columnId)}
@@ -203,7 +220,6 @@ export function DataTable<TData extends Payment, TValue>({
           }))
         );
 
-        columnInputsRef.current?.set(columnId, '');
         setColumnInputs((prevInputs) => {
           const newInputs = new Map(prevInputs);
           newInputs.delete(columnId);
