@@ -219,12 +219,6 @@ export function DataTable<TData extends Payment, TValue>({
             [columnId]: '',
           }))
         );
-
-        setColumnInputs((prevInputs) => {
-          const newInputs = new Map(prevInputs);
-          newInputs.delete(columnId);
-          return newInputs;
-        });
       },
       updateData: <K extends keyof TData>(
         rowIndex: number,
