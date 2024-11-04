@@ -15,6 +15,7 @@ import {
   Pencil1Icon,
 } from '@radix-ui/react-icons';
 import { Input } from '@/components/ui/input';
+import { Checkbox } from '@/components/ui/checkbox';
 
 import { CustomTableCell } from './App';
 
@@ -122,7 +123,7 @@ export function DataTable<TData extends Payment, TValue>({
                   onKeyDown={(e) => handleInputSubmit(e, columnId)}
                   type={'text'}
                   className='border rounded p-2 w-full autofocus'
-                  placeholder='Enter column name'
+                  placeholder='New Column'
                 />
               ),
             } as ColumnDef<TData, TValue>)
@@ -132,7 +133,10 @@ export function DataTable<TData extends Payment, TValue>({
   };
 
   const handleMouseEnter = (columnId: string) => {
-    setHoveredColumnId(columnId);
+    // resizes dros ar gamovides iconebi
+    if (!table.getColumn(columnId)?.getIsResizing()) {
+      setHoveredColumnId(columnId);
+    }
   };
 
   const handleMouseLeave = () => {
@@ -142,6 +146,7 @@ export function DataTable<TData extends Payment, TValue>({
   const table = useReactTable({
     data,
     columns,
+    columnResizeMode: 'onChange', // amis gareshe nelia azri ar aq
     state: {
       hoveredColumnId,
       columnInputs,
@@ -207,8 +212,9 @@ export function DataTable<TData extends Payment, TValue>({
           ),
           meta: {
             type: 'text',
+            isCustomColumn: true,
           },
-          size: 250,
+          size: 180,
         } as unknown as ColumnDef<TData, TValue>;
         setColumns((prevColumn) => {
           const newColumns = [...prevColumn];
@@ -285,25 +291,60 @@ export function DataTable<TData extends Payment, TValue>({
   });
 
   return (
-    <div
-      className={`rounded-md border ${
-        columns.length <= 7 ? 'overflow-x-hidden' : 'overflow-x-auto'
-      } w-full`}
-    >
-      <Table className={'min-w-max table-auto'}>
+    <div className='p-2'>
+      <div className='flex items-center space-x-2'>
+        <>
+          <Checkbox
+            id='datetime'
+            className='rounded'
+            checked={table.getColumn('datetime')!.getIsVisible()}
+            onCheckedChange={() =>
+              table.getColumn('datetime')!.toggleVisibility()
+            }
+          />
+          <label
+            htmlFor='datetime'
+            className='text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70'
+          >
+            Toggle datetime
+          </label>
+        </>
+      </div>
+
+      <div className='h-4' />
+      <Table
+        className='rounded-md border !border-separate border-spacing-0'
+        style={{
+          width: table.getTotalSize(),
+        }}
+      >
         <TableHeader>
           {table.getHeaderGroups().map((headerGroup) => (
             <TableRow key={headerGroup.id}>
               <TableHead></TableHead>
               {headerGroup.headers.map((header) => {
                 return (
-                  <TableHead key={header.id}>
+                  <TableHead key={header.id} className='relative'>
                     {header.isPlaceholder
                       ? null
                       : flexRender(
                           header.column.columnDef.header,
                           header.getContext()
                         )}
+                    {header.column.columnDef.meta?.isCustomColumn && (
+                      <div
+                        {...{
+                          onDoubleClick: () => header.column.resetSize(),
+                          onMouseDown: header.getResizeHandler(),
+                          onTouchStart: header.getResizeHandler(),
+                          className: `${
+                            header.column.getIsResizing()
+                              ? 'bg-sky-600 opacity-100'
+                              : ''
+                          } bg-black/50 cursor-col-resize h-full absolute right-0 top-0 touch-none select-none w-[5px]`,
+                        }}
+                      />
+                    )}
                   </TableHead>
                 );
               })}

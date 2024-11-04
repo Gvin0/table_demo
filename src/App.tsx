@@ -36,6 +36,15 @@ declare module '@tanstack/react-table' {
   }
 }
 
+declare module '@tanstack/react-table' {
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  interface ColumnMeta<TData extends RowData, TValue> {
+    type?: 'text' | 'select' | 'number' | 'date';
+    options?: { value: string; label: string }[];
+    isCustomColumn?: boolean;
+  }
+}
+
 interface CustomColumnMeta {
   type?: 'text' | 'select' | 'number' | 'date';
   options?: { value: string; label: string }[];
@@ -110,7 +119,7 @@ export const CustomTableCell = ({
 }: CellContext<Payment, unknown>) => {
   const [value, setValue] = useState<string>(
     String(row.original[column.id] ?? '')
-  ); // crutial for bug fixing
+  );
   const columnMeta = column.columnDef.meta as CustomColumnMeta;
   const tableMeta = table.options.meta;
 
