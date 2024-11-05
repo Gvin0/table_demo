@@ -33,6 +33,7 @@ declare module '@tanstack/react-table' {
     cloneRow: (row: TData) => void;
     addColumn: () => void;
     finalizeNewColumn: (columnId: string) => void;
+    scrollOnFocus: (e: React.FocusEvent<HTMLInputElement>) => void;
   }
 }
 
@@ -139,6 +140,10 @@ export const CustomTableCell = ({
     tableMeta?.updateData(row.index, column.id as keyof Payment, value);
   };
 
+  const handleInputFocus = (e: React.FocusEvent<HTMLInputElement>) => {
+    tableMeta?.scrollOnFocus(e);
+  };
+
   if (columnMeta?.type === 'select') {
     return (
       <Select onValueChange={onSelectChange} value={value}>
@@ -163,6 +168,7 @@ export const CustomTableCell = ({
         onChange={(e) => setValue(e.target.value)}
         onBlur={onBlur}
         type={columnMeta?.type || 'text'}
+        onFocus={(e) => handleInputFocus(e)}
       />
     );
   }

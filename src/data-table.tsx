@@ -1,4 +1,4 @@
-import { useState, CSSProperties } from 'react';
+import { useState, CSSProperties, useRef } from 'react';
 import { Payment } from './App';
 import {
   ColumnDef,
@@ -102,6 +102,8 @@ export function DataTable<TData extends Payment, TValue>({
   );
 
   const [hoveredColumnId, setHoveredColumnId] = useState<string | null>(null);
+
+  const tableContainerRef = useRef<HTMLDivElement>(null);
 
   const handleInputChange = (columnId: string, value: string) => {
     setColumnInputs((prevInputs) => {
@@ -320,6 +322,28 @@ export function DataTable<TData extends Payment, TValue>({
 
         setTimeout(() => setHighlightedRowId(null), 2000);
       },
+      scrollOnFocus: (e: React.FocusEvent<HTMLInputElement>) => {
+        const tableContainer = tableContainerRef.current;
+        const input = e.target;
+
+        if (tableContainer && input) {
+          const inputRect = input.getBoundingClientRect();
+          const containerRect = tableContainer.getBoundingClientRect();
+
+          // Check if the input is hidden by the pinned column
+          const isOverlappingPinnedColumn =
+            inputRect.right > containerRect.width - 50;
+
+          if (isOverlappingPinnedColumn) {
+            setTimeout(() => {
+              tableContainer.scrollTo({
+                left: 300,
+                behavior: 'smooth',
+              });
+            }, 0);
+          }
+        }
+      },
     },
   });
 
@@ -363,11 +387,13 @@ export function DataTable<TData extends Payment, TValue>({
       </div>
 
       <div className='h-4' />
+      {/* <div className='relative w-full overflow-x-auto' ref={tableContainerRef}> */}
       <Table
         className='rounded-md border !border-separate border-spacing-0'
         style={{
           width: table.getTotalSize(),
         }}
+        tableRef={tableContainerRef}
       >
         <TableHeader>
           {table.getHeaderGroups().map((headerGroup) => (
@@ -494,6 +520,7 @@ export function DataTable<TData extends Payment, TValue>({
           </TableRow>
         </TableFooter>
       </Table>
+      {/* </div> */}
     </>
   );
 }
