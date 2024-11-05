@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, CSSProperties } from 'react';
 import { Payment } from './App';
 import {
   ColumnDef,
@@ -6,6 +6,7 @@ import {
   getCoreRowModel,
   useReactTable,
   CellContext,
+  Column,
 } from '@tanstack/react-table';
 
 import {
@@ -43,6 +44,34 @@ interface DataTableProps<TData extends Payment, TValue> {
   data: TData[];
 }
 
+const getCommonPinningStyles = (
+  column: Column<Payment>,
+  isCell: boolean
+): CSSProperties => {
+  const isPinned = column.getIsPinned();
+  const isLastLeftPinnedColumn =
+    isPinned === 'left' && column.getIsLastColumn('left');
+  const isFirstRightPinnedColumn =
+    isPinned === 'right' && column.getIsFirstColumn('right');
+
+  return {
+    boxShadow: isLastLeftPinnedColumn
+      ? '-4px 0 4px -4px gray inset'
+      : isFirstRightPinnedColumn
+      ? '4px 0 4px -4px gray inset'
+      : undefined,
+    left: isPinned === 'left' ? `${column.getStart('left')}px` : undefined,
+    right: isPinned === 'right' ? `${column.getAfter('right')}px` : undefined,
+    opacity: isPinned && isCell ? 0.95 : 1,
+    backgroundColor: isPinned && isCell ? 'bg-transparent	' : 'white',
+    // opacity: 1,
+    // backgroundColor: 'white',
+    position: isPinned ? 'sticky' : 'relative',
+    width: column.getSize(),
+    zIndex: isPinned ? 1 : 0,
+  };
+};
+
 export function DataTable<TData extends Payment, TValue>({
   columns: defaultColumns,
   data: defaultData,
@@ -53,6 +82,7 @@ export function DataTable<TData extends Payment, TValue>({
     id: 'row-number',
     header: 'No.',
     cell: (info) => info.row.index + 1,
+    size: 50,
   };
 
   const [columns, setColumns] = useState<ColumnDef<TData, TValue>[]>(() => [
@@ -170,18 +200,20 @@ export function DataTable<TData extends Payment, TValue>({
                       onMouseLeave={() => handleMouseLeave()}
                     >
                       <span>{columnName}</span>
-                      {table.getState().hoveredColumnId === columnId && (
-                        <div className='flex space-x-1 ml-2 opacity-100 transition-opacity duration-300'>
-                          <Pencil1Icon
-                            className='cursor-pointer text-blue-500 hover:text-blue-700'
-                            onClick={() => editColumn(columnId)}
-                          />
-                          <TrashIcon
-                            onClick={() => deleteColumn(columnId)}
-                            className='cursor-pointer text-red-500 hover:text-red-700'
-                          />
-                        </div>
-                      )}
+                      <div className='flex space-x-1 ml-2 opacity-100 transition-opacity duration-300 min-w-12'>
+                        {table.getState().hoveredColumnId === columnId && (
+                          <>
+                            <Pencil1Icon
+                              className='cursor-pointer text-blue-500 hover:text-blue-700'
+                              onClick={() => editColumn(columnId)}
+                            />
+                            <TrashIcon
+                              onClick={() => deleteColumn(columnId)}
+                              className='cursor-pointer text-red-500 hover:text-red-700'
+                            />
+                          </>
+                        )}
+                      </div>
                     </div>
                   ),
                 } as ColumnDef<TData, TValue>)
@@ -205,6 +237,7 @@ export function DataTable<TData extends Payment, TValue>({
               type={'text'}
               className='border rounded p-2 w-full autofocus'
               placeholder='Enter column name'
+              style={{ width: 200 }}
             />
           ),
           cell: (info: CellContext<Payment, unknown>) => (
@@ -214,7 +247,7 @@ export function DataTable<TData extends Payment, TValue>({
             type: 'text',
             isCustomColumn: true,
           },
-          size: 180,
+          size: 200,
         } as unknown as ColumnDef<TData, TValue>;
         setColumns((prevColumn) => {
           const newColumns = [...prevColumn];
@@ -291,7 +324,7 @@ export function DataTable<TData extends Payment, TValue>({
   });
 
   return (
-    <div className='p-2'>
+    <>
       <div className='flex items-center space-x-2'>
         <>
           <Checkbox
@@ -309,6 +342,24 @@ export function DataTable<TData extends Payment, TValue>({
             Toggle datetime
           </label>
         </>
+        <>
+          <Checkbox
+            id='actions'
+            className='rounded'
+            checked={table.getColumn('actions')!.getIsPinned() === 'right'}
+            onCheckedChange={(checked) =>
+              checked
+                ? table.getColumn('actions')!.pin('right')
+                : table.getColumn('actions')!.pin(false)
+            }
+          />
+          <label
+            htmlFor='datetime'
+            className='text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70'
+          >
+            Pin actions
+          </label>
+        </>
       </div>
 
       <div className='h-4' />
@@ -323,8 +374,23 @@ export function DataTable<TData extends Payment, TValue>({
             <TableRow key={headerGroup.id}>
               <TableHead></TableHead>
               {headerGroup.headers.map((header) => {
+                const { column } = header;
                 return (
-                  <TableHead key={header.id} className='relative'>
+                  <TableHead
+                    key={header.id}
+                    colSpan={header.colSpan}
+                    className='relative'
+                    style={
+                      column.getIsPinned()
+                        ? {
+                            ...getCommonPinningStyles(
+                              column as unknown as Column<Payment, unknown>,
+                              false
+                            ),
+                          }
+                        : {}
+                    }
+                  >
                     {header.isPlaceholder
                       ? null
                       : flexRender(
@@ -379,11 +445,30 @@ export function DataTable<TData extends Payment, TValue>({
                     onClick={() => table.options.meta?.cloneRow(row.original)}
                   />
                 </TableCell>
-                {row.getVisibleCells().map((cell, index) => (
-                  <TableCell key={`${row.id}_${cell.column.id}_${index}`}>
-                    {flexRender(cell.column.columnDef.cell, cell.getContext())}
-                  </TableCell>
-                ))}
+                {row.getVisibleCells().map((cell, index) => {
+                  const { column } = cell;
+                  return (
+                    <TableCell
+                      className='text-center min-w'
+                      style={
+                        column.getIsPinned()
+                          ? {
+                              ...getCommonPinningStyles(
+                                column as unknown as Column<Payment, unknown>,
+                                true
+                              ),
+                            }
+                          : {}
+                      }
+                      key={`${row.id}_${cell.column.id}_${index}`}
+                    >
+                      {flexRender(
+                        cell.column.columnDef.cell,
+                        cell.getContext()
+                      )}
+                    </TableCell>
+                  );
+                })}
               </TableRow>
             ))
           ) : (
@@ -409,6 +494,6 @@ export function DataTable<TData extends Payment, TValue>({
           </TableRow>
         </TableFooter>
       </Table>
-    </div>
+    </>
   );
 }

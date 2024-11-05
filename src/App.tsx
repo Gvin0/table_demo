@@ -175,7 +175,7 @@ const columns = [
     meta: {
       type: 'text',
     },
-    size: 100,
+    size: 150,
   }),
   columnHelper.accessor('amount', {
     header: 'Total Amount',
@@ -185,6 +185,14 @@ const columns = [
     },
     size: 150,
   }),
+  columnHelper.accessor('exice', {
+    header: 'Exice Duty',
+    cell: (info) => <CustomTableCell {...info} />,
+    meta: {
+      type: 'number',
+    },
+    minSize: 180,
+  }),
   columnHelper.accessor('datetime', {
     header: 'Date Of Payment',
     cell: (info) => <CustomTableCell {...info} />,
@@ -193,6 +201,7 @@ const columns = [
     },
     size: 200,
   }),
+
   columnHelper.accessor('status', {
     header: 'Invoice Status',
     cell: (info) => <CustomTableCell {...info} />,
@@ -205,15 +214,7 @@ const columns = [
         { value: 'failed', label: 'failef' },
       ],
     },
-    size: 150,
-  }),
-  columnHelper.accessor('exice', {
-    header: 'Exice Duty',
-    cell: (info) => <CustomTableCell {...info} />,
-    meta: {
-      type: 'number',
-    },
-    size: 150,
+    size: 180,
   }),
   {
     id: 'actions',
@@ -222,8 +223,10 @@ const columns = [
 
       return (
         <LayoutIcon
-          className={`cursor-pointer ${
-            isDisabled ? 'opacity-50 cursor-not-allowed' : ''
+          className={`${
+            isDisabled
+              ? 'opacity-25 cursor-not-allowed'
+              : 'opacity-100 cursor-pointer'
           }`}
           onClick={() => {
             if (!isDisabled) {
@@ -233,7 +236,8 @@ const columns = [
         />
       );
     },
-    enableHiding: false,
+    size: 100,
+    enableHiding: true,
     cell: ({ row, table }) => {
       return table.getRowModel().rows.length > 1 ? (
         <TrashIcon
