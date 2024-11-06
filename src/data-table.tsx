@@ -243,7 +243,13 @@ export function DataTable<TData extends Payment, TValue>({
             />
           ),
           cell: (info: CellContext<Payment, unknown>) => (
-            <CustomTableCell {...info} />
+            <CustomTableCell
+              {...info}
+              isCustomColumn={
+                info.column.columnDef.meta?.isCustomColumn || false
+              }
+              tableContainerRef={tableContainerRef}
+            />
           ),
           meta: {
             type: 'text',

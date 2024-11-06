@@ -51,6 +51,12 @@ interface CustomColumnMeta {
   options?: { value: string; label: string }[];
 }
 
+interface CustomTableCellProps<TData, TValue>
+  extends CellContext<TData, TValue> {
+  isCustomColumn?: boolean;
+  tableContainerRef?: React.RefObject<HTMLDivElement>;
+}
+
 import { DataTable } from './data-table';
 import { DatePickerDemo } from './datepicker';
 
@@ -117,7 +123,9 @@ export const CustomTableCell = ({
   row,
   column,
   table,
-}: CellContext<Payment, unknown>) => {
+  isCustomColumn,
+  tableContainerRef,
+}: CustomTableCellProps<Payment, unknown>) => {
   const [value, setValue] = useState<string>(
     String(row.original[column.id] ?? '')
   );
@@ -141,7 +149,16 @@ export const CustomTableCell = ({
   };
 
   const handleInputFocus = (e: React.FocusEvent<HTMLInputElement>) => {
-    tableMeta?.scrollOnFocus(e);
+    if (!isCustomColumn || !tableContainerRef?.current) return;
+
+    const { scrollLeft, scrollWidth, clientWidth } = tableContainerRef.current;
+
+    // Check if the table is already scrolled to the max right
+    const isScrolledToMaxRight = scrollLeft + clientWidth >= scrollWidth;
+
+    if (!isScrolledToMaxRight) {
+      tableMeta?.scrollOnFocus(e);
+    }
   };
 
   if (columnMeta?.type === 'select') {
