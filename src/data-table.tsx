@@ -38,7 +38,7 @@ declare module '@tanstack/table-core' {
   }
 }
 
-interface DataTableProps<TData, TValue> {
+interface DataTableProps<TData extends { id: string | number }, TValue> {
   columns: ColumnDef<TData, TValue>[];
   data: TData[];
 }
@@ -69,7 +69,7 @@ const getCommonPinningStyles =<TData,> (
   };
 };
 
-export function DataTable<TData, TValue>({
+export function DataTable<TData extends { id: string | number }, TValue>({
   columns: defaultColumns,
   data: defaultData,
 }: DataTableProps<TData, TValue>) {

@@ -51,7 +51,7 @@ interface CustomColumnMeta {
   options?: { value: string; label: string }[];
 }
 
-interface CustomTableCellProps<TData, TValue>
+interface CustomTableCellProps<TData extends { id: string | number }, TValue>
   extends CellContext<TData, TValue> {
   isCustomColumn?: boolean;
   tableContainerRef?: React.RefObject<HTMLDivElement>;
@@ -119,14 +119,14 @@ const data: Payment[] = [
   // ...
 ];
 
-export function CustomTableCell<TData, TValue>({
+export function CustomTableCell<TData extends { id: string | number }, TValue>({
   row,
   column,
   table,
   isCustomColumn,
   tableContainerRef,
   
-}: CustomTableCellProps<TData, TValue>) {
+}: CustomTableCellProps<TData , TValue>) {
   const [value, setValue] = useState<string>(
     String(row.original[column.id as keyof TData] ?? '')
   );
