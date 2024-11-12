@@ -130,11 +130,12 @@ export function CustomTableCell<TData extends { id: string | number }, TValue>({
   const [value, setValue] = useState<string>(
     String(row.original[column.id as keyof TData] ?? '')
   );
+
   const columnMeta = column.columnDef.meta as CustomColumnMeta;
   const tableMeta = table.options.meta;
 
   useEffect(() => {
-    String(row.original[column.id as keyof TData] ?? '')
+    setValue(String(row.original[column.id as keyof TData] ?? ''))
   }, [row.original, column.id]);
 
   const onBlur = () => {
