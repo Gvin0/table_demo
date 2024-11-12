@@ -1,5 +1,4 @@
 import { useState, CSSProperties, useRef } from 'react';
-import { Payment } from './App';
 import {
   ColumnDef,
   flexRender,
@@ -39,13 +38,13 @@ declare module '@tanstack/table-core' {
   }
 }
 
-interface DataTableProps<TData extends Payment, TValue> {
+interface DataTableProps<TData, TValue> {
   columns: ColumnDef<TData, TValue>[];
   data: TData[];
 }
 
-const getCommonPinningStyles = (
-  column: Column<Payment>,
+const getCommonPinningStyles =<TData,> (
+  column: Column<TData>,
   isCell: boolean
 ): CSSProperties => {
   const isPinned = column.getIsPinned();
@@ -63,16 +62,14 @@ const getCommonPinningStyles = (
     left: isPinned === 'left' ? `${column.getStart('left')}px` : undefined,
     right: isPinned === 'right' ? `${column.getAfter('right')}px` : undefined,
     opacity: isPinned && isCell ? 0.95 : 1,
-    backgroundColor: isPinned && isCell ? 'bg-transparent	' : 'white',
-    // opacity: 1,
-    // backgroundColor: 'white',
+    backgroundColor: isPinned && isCell ? 'bg-transparent' : 'white',
     position: isPinned ? 'sticky' : 'relative',
     width: column.getSize(),
     zIndex: isPinned ? 1 : 0,
   };
 };
 
-export function DataTable<TData extends Payment, TValue>({
+export function DataTable<TData, TValue>({
   columns: defaultColumns,
   data: defaultData,
 }: DataTableProps<TData, TValue>) {
@@ -165,7 +162,6 @@ export function DataTable<TData extends Payment, TValue>({
   };
 
   const handleMouseEnter = (columnId: string) => {
-    // resizes dros ar gamovides iconebi
     if (!table.getColumn(columnId)?.getIsResizing()) {
       setHoveredColumnId(columnId);
     }
@@ -178,7 +174,7 @@ export function DataTable<TData extends Payment, TValue>({
   const table = useReactTable({
     data,
     columns,
-    columnResizeMode: 'onChange', // amis gareshe nelia azri ar aq
+    columnResizeMode: 'onChange',
     state: {
       hoveredColumnId,
       columnInputs,
@@ -242,12 +238,10 @@ export function DataTable<TData extends Payment, TValue>({
               style={{ width: 200 }}
             />
           ),
-          cell: (info: CellContext<Payment, unknown>) => (
+          cell: (info: CellContext<TData, unknown>) => (
             <CustomTableCell
               {...info}
-              isCustomColumn={
-                info.column.columnDef.meta?.isCustomColumn || false
-              }
+              isCustomColumn={info.column.columnDef.meta?.isCustomColumn || false}
               tableContainerRef={tableContainerRef}
             />
           ),
@@ -287,45 +281,45 @@ export function DataTable<TData extends Payment, TValue>({
           })
         );
       },
-      removeRow: (id: string | number) => {
-        setDeletingRowId(id);
+      removeRow: (id: TData extends { id: infer U } ? U : string | number) => {
+        setDeletingRowId(id as string | number);
         setTimeout(() => {
           setData((oldData) => oldData.filter((row) => row.id !== id));
           setDeletingRowId(null);
         }, 200);
       },
       addRow: () => {
-        const newRow: Payment = {
+        const newRow: TData = {
           id: Math.floor(Math.random() * 10000).toString(),
-          exice: 0,
-          datetime: new Date(),
-          status: 'pending',
-          amount: 0,
-          email: '',
-          // ...Object.fromEntries(columns.map((col) => [col.id, ''])),
-        };
-        setAddingRowId(newRow.id);
-        setData((oldData) => [...oldData, newRow as TData]);
+          ...Object.fromEntries(
+            columns
+              .filter((col) => col.id !== 'row-number')
+              .map((col) => [col.id, ''])
+          ),
+        } as TData;
+
+        setAddingRowId(newRow.id as string | number);
+        setData((oldData) => [...oldData, newRow]);
         setTimeout(() => {
           setAddingRowId(null);
         }, 200);
       },
-      cloneRow: (row: Payment) => {
-        const clonedRow: Payment = {
+      cloneRow: (row: TData) => {
+        const clonedRow: TData = {
           ...row,
           id: `${row.id}-${Math.floor(Math.random() * 10000).toString()}`,
         };
+
         setData((oldData) => {
           const rowIndex = oldData.findIndex((r) => r.id === row.id);
           if (rowIndex === -1) return oldData;
 
           const newData = [...oldData];
-          newData.splice(rowIndex + 1, 0, clonedRow as TData);
+          newData.splice(rowIndex + 1, 0, clonedRow);
           return newData;
         });
 
-        setHighlightedRowId(clonedRow.id);
-
+        setHighlightedRowId(clonedRow.id as string);
         setTimeout(() => setHighlightedRowId(null), 2000);
       },
       scrollOnFocus: (e: React.FocusEvent<HTMLInputElement>) => {
@@ -393,7 +387,6 @@ export function DataTable<TData extends Payment, TValue>({
       </div>
 
       <div className='h-4' />
-      {/* <div className='relative w-full overflow-x-auto' ref={tableContainerRef}> */}
       <Table
         className='rounded-md border !border-separate border-spacing-0'
         style={{
@@ -416,7 +409,7 @@ export function DataTable<TData extends Payment, TValue>({
                       column.getIsPinned()
                         ? {
                             ...getCommonPinningStyles(
-                              column as unknown as Column<Payment, unknown>,
+                              column as unknown as Column<TData, unknown>,
                               false
                             ),
                           }
@@ -486,7 +479,7 @@ export function DataTable<TData extends Payment, TValue>({
                         column.getIsPinned()
                           ? {
                               ...getCommonPinningStyles(
-                                column as unknown as Column<Payment, unknown>,
+                                column as unknown as Column<TData, unknown>,
                                 true
                               ),
                             }
@@ -526,7 +519,6 @@ export function DataTable<TData extends Payment, TValue>({
           </TableRow>
         </TableFooter>
       </Table>
-      {/* </div> */}
     </>
   );
 }

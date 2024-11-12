@@ -119,33 +119,34 @@ const data: Payment[] = [
   // ...
 ];
 
-export const CustomTableCell = ({
+export function CustomTableCell<TData, TValue>({
   row,
   column,
   table,
   isCustomColumn,
   tableContainerRef,
-}: CustomTableCellProps<Payment, unknown>) => {
+  
+}: CustomTableCellProps<TData, TValue>) {
   const [value, setValue] = useState<string>(
-    String(row.original[column.id] ?? '')
+    String(row.original[column.id as keyof TData] ?? '')
   );
   const columnMeta = column.columnDef.meta as CustomColumnMeta;
   const tableMeta = table.options.meta;
 
   useEffect(() => {
-    setValue(String(row.original[column.id] ?? ''));
+    String(row.original[column.id as keyof TData] ?? '')
   }, [row.original, column.id]);
 
   const onBlur = () => {
     table.options.meta?.updateData(
       row.index,
-      column.id as keyof Payment,
-      value
+      column.id as keyof TData,
+      value as TData[keyof TData]
     );
   };
   const onSelectChange = (value: string) => {
     setValue(value);
-    tableMeta?.updateData(row.index, column.id as keyof Payment, value);
+    tableMeta?.updateData(row.index, column.id as keyof TData, value as TData[keyof TData]);
   };
 
   const handleInputFocus = (e: React.FocusEvent<HTMLInputElement>) => {
