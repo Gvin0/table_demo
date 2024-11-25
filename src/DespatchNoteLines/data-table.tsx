@@ -17,7 +17,9 @@ import {
 import { Input } from '@/components/ui/input';
 import { Checkbox } from '@/components/ui/checkbox';
 
-import { CustomTableCell } from './App';
+import { CustomTableCell } from '../DespatchNoteLines/custom-table-cell';
+import { DataTableProps } from './types'
+import './types';
 
 import {
   Table,
@@ -28,20 +30,7 @@ import {
   TableRow,
   TableFooter,
 } from '@/components/ui/table';
-
 import '@tanstack/table-core';
-
-declare module '@tanstack/table-core' {
-  interface TableState {
-    hoveredColumnId: string | null;
-    columnInputs: Map<string, string> | null;
-  }
-}
-
-interface DataTableProps<TData extends { id: string | number }, TValue> {
-  columns: ColumnDef<TData, TValue>[];
-  data: TData[];
-}
 
 const getCommonPinningStyles =<TData,> (
   column: Column<TData>,
