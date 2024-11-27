@@ -61,6 +61,7 @@ const getCommonPinningStyles =<TData,> (
 export function DataTable<TData extends { id: string | number }, TValue>({
   columns: defaultColumns,
   data: defaultData,
+  isReadOnly
 }: DataTableProps<TData, TValue>) {
   const [data, setData] = useState<TData[]>(() => [...defaultData]);
 
@@ -140,7 +141,7 @@ export function DataTable<TData extends { id: string | number }, TValue>({
                   onBlur={(e) => handleInputSubmit(e, columnId)}
                   onKeyDown={(e) => handleInputSubmit(e, columnId)}
                   type={'text'}
-                  className='border rounded p-2 w-full autofocus'
+                  className='border rounded p-2 min-w-40 w-full autofocus'
                   placeholder='New Column'
                 />
               ),
@@ -170,6 +171,7 @@ export function DataTable<TData extends { id: string | number }, TValue>({
     },
     getCoreRowModel: getCoreRowModel(),
     meta: {
+      isReadOnly,
       finalizeNewColumn: (columnId: string) => {
         const columnName = table.getState().columnInputs?.get(columnId)?.trim();
         if (!columnName) return;
@@ -222,7 +224,7 @@ export function DataTable<TData extends { id: string | number }, TValue>({
               onBlur={(e) => handleInputSubmit(e, columnId)}
               onKeyDown={(e) => handleInputSubmit(e, columnId)}
               type={'text'}
-              className='border rounded p-2 w-full autofocus'
+              className='border rounded p-2 min-w-40 w-full autofocus'
               placeholder='Enter column name'
               style={{ width: 200 }}
             />
@@ -337,44 +339,43 @@ export function DataTable<TData extends { id: string | number }, TValue>({
   });
 
   return (
-    <>
-      <div className='flex items-center space-x-2'>
-        <>
-          <Checkbox
-            id='datetime'
-            className='rounded'
-            checked={table.getColumn('datetime')!.getIsVisible()}
-            onCheckedChange={() =>
-              table.getColumn('datetime')!.toggleVisibility()
-            }
-          />
-          <label
-            htmlFor='datetime'
-            className='text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70'
-          >
-            Toggle datetime
-          </label>
-        </>
-        <>
-          <Checkbox
-            id='actions'
-            className='rounded'
-            checked={table.getColumn('actions')!.getIsPinned() === 'right'}
-            onCheckedChange={(checked) =>
-              checked
-                ? table.getColumn('actions')!.pin('right')
-                : table.getColumn('actions')!.pin(false)
-            }
-          />
-          <label
-            htmlFor='datetime'
-            className='text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70'
-          >
-            Pin actions
-          </label>
-        </>
-      </div>
-
+    <>{!isReadOnly && <div className='flex items-center space-x-2'>
+      <>
+        <Checkbox
+          id='datetime'
+          className='rounded'
+          checked={table.getColumn('datetime')!.getIsVisible()}
+          onCheckedChange={() =>
+            table.getColumn('datetime')!.toggleVisibility()
+          }
+        />
+        <label
+          htmlFor='datetime'
+          className='text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70'
+        >
+          Toggle datetime
+        </label>
+      </>
+      <>
+        <Checkbox
+          id='actions'
+          className='rounded'
+          checked={table.getColumn('actions')!.getIsPinned() === 'right'}
+          onCheckedChange={(checked) =>
+            checked
+              ? table.getColumn('actions')!.pin('right')
+              : table.getColumn('actions')!.pin(false)
+          }
+        />
+        <label
+          htmlFor='datetime'
+          className='text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70'
+        >
+          Pin actions
+        </label>
+      </>
+    </div>}
+     
       <div className='h-4' />
       <Table
         className='rounded-md border !border-separate border-spacing-0'
@@ -386,7 +387,7 @@ export function DataTable<TData extends { id: string | number }, TValue>({
         <TableHeader>
           {table.getHeaderGroups().map((headerGroup) => (
             <TableRow key={headerGroup.id}>
-              <TableHead></TableHead>
+              {!isReadOnly && <TableHead></TableHead>}
               {headerGroup.headers.map((header) => {
                 const { column } = header;
                 return (
@@ -453,12 +454,12 @@ export function DataTable<TData extends { id: string | number }, TValue>({
                   }
                 `}
               >
-                <TableCell className='text-center w-1'>
+                {!isReadOnly && <TableCell className='text-center w-1'>
                   <CopyIcon
                     className='cursor-pointer text-gray-500 hover:text-gray-800'
                     onClick={() => table.options.meta?.cloneRow(row.original)}
                   />
-                </TableCell>
+                </TableCell>}
                 {row.getVisibleCells().map((cell, index) => {
                   const { column } = cell;
                   return (
@@ -478,7 +479,7 @@ export function DataTable<TData extends { id: string | number }, TValue>({
                     >
                       {flexRender(
                         cell.column.columnDef.cell,
-                        cell.getContext()
+                        {...cell.getContext(), isReadOnly}
                       )}
                     </TableCell>
                   );
@@ -493,7 +494,7 @@ export function DataTable<TData extends { id: string | number }, TValue>({
             </TableRow>
           )}
         </TableBody>
-        <TableFooter>
+        {!isReadOnly && <TableFooter>
           <TableRow>
             <TableCell
               colSpan={columns.length + 1}
@@ -506,7 +507,7 @@ export function DataTable<TData extends { id: string | number }, TValue>({
               </div>
             </TableCell>
           </TableRow>
-        </TableFooter>
+        </TableFooter>}      
       </Table>
     </>
   );

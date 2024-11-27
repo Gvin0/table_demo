@@ -25,9 +25,13 @@ const columns = [
       type: 'text',
     },
     size: 150,
+    minSize:150
   }),
   columnHelper.accessor('amount', {
-    header: 'Total Amount',
+    // header: 'Total Amount',
+    header: () => (
+      <div className="min-w-40">Total Amount</div>
+    ),
     cell: (info) => <CustomTableCell {...info} />,
     meta: {
       type: 'text',
@@ -35,7 +39,10 @@ const columns = [
     size: 150,
   }),
   columnHelper.accessor('exice', {
-    header: 'Exice Duty',
+    // header: 'Exice Duty',
+    header: () => (
+      <div className="min-w-40">Exice Duty</div>
+    ),
     cell: (info) => <CustomTableCell {...info} />,
     meta: {
       type: 'number',
@@ -69,7 +76,7 @@ const columns = [
     id: 'actions',
     header: ({ table }) => {
       const isDisabled = table.getAllColumns().length > 10;
-
+      // const isReadOnly = table.options.meta?.isReadOnly;      
       return (
         <LayoutIcon
           className={`${
@@ -102,7 +109,7 @@ function App() {
   return (
     <>
       <div className='container mx-auto py-10'>
-        <DataTable columns={columns} data={data} />
+        <DataTable columns={columns} data={data} isReadOnly={false}/>
       </div>
     </>
   );

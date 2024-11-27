@@ -12,10 +12,12 @@ export  interface CustomTableCellProps<TData extends { id: string | number }, TV
   extends CellContext<TData, TValue> {
   isCustomColumn?: boolean;
   tableContainerRef?: React.RefObject<HTMLDivElement>;
+  isReadOnly?: boolean;
 }
 export interface DataTableProps<TData extends { id: string | number }, TValue> {
     columns: ColumnDef<TData, TValue>[];
     data: TData[];
+    isReadOnly: boolean;
 }
 declare module '@tanstack/react-table' {
     interface TableMeta<TData extends RowData> {
@@ -32,8 +34,10 @@ declare module '@tanstack/react-table' {
       addColumn: () => void;
       finalizeNewColumn: (columnId: string) => void;
       scrollOnFocus: (e: React.FocusEvent<HTMLInputElement>) => void;
+      isReadOnly: boolean;
     }
   
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     interface ColumnMeta<TData extends RowData, TValue> {
       type?: 'text' | 'select' | 'number' | 'date';
       options?: { value: string; label: string }[];

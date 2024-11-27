@@ -18,7 +18,7 @@ export function CustomTableCell<TData extends { id: string | number }, TValue>({
     table,
     isCustomColumn,
     tableContainerRef,
-    
+    isReadOnly
   }: CustomTableCellProps<TData , TValue>) {
     const [value, setValue] = useState<string>(
       String(row.original[column.id as keyof TData] ?? '')
@@ -32,7 +32,7 @@ export function CustomTableCell<TData extends { id: string | number }, TValue>({
     }, [row.original, column.id]);
   
     const onBlur = () => {
-      table.options.meta?.updateData(
+      tableMeta?.updateData(
         row.index,
         column.id as keyof TData,
         value as TData[keyof TData]
@@ -55,7 +55,8 @@ export function CustomTableCell<TData extends { id: string | number }, TValue>({
         tableMeta?.scrollOnFocus(e);
       }
     };
-  
+
+    if(isReadOnly) return <div>{value}</div>
     if (columnMeta?.type === 'select') {
       return (
         <Select onValueChange={onSelectChange} value={value}>
@@ -81,6 +82,7 @@ export function CustomTableCell<TData extends { id: string | number }, TValue>({
           onBlur={onBlur}
           type={columnMeta?.type || 'text'}
           onFocus={(e) => handleInputFocus(e)}
+          // disabled
         />
       );
     }
