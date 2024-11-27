@@ -41,6 +41,10 @@ export function CustomTableCell<TData extends { id: string | number }, TValue>({
     const onSelectChange = (value: string) => {
       setValue(value);
       tableMeta?.updateData(row.index, column.id as keyof TData, value as TData[keyof TData]);
+      if(value === 'success') {
+        tableMeta?.updateData(row.index, 'amount' as keyof TData, '99999' as TData[keyof TData]);
+      }
+
     };
   
     const handleInputFocus = (e: React.FocusEvent<HTMLInputElement>) => {
